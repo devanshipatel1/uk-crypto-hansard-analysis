@@ -1,0 +1,10 @@
+Dataset: data/processed/hansard_crypto_2020_2025_pilot.csv
+Rows: 124
+Verified debates/proceedings: 8
+Archive chunks: 10
+Encoded archive length: 137004 characters
+Raw CSV SHA256: 99bd34136c1978bccbdeb522a21090e34bb47ef0d4550fbfaec66162f60da293
+Encoded archive SHA256: 17509e04bdc6edd5a439bf8fe56a26d9018e913984980885a83ea7248f4c0624
+Coverage status: verified targeted pilot, mainly 2022-2025
+Intended dissertation study window: 2020-2025
+Primary source: UK Parliament Hansard
