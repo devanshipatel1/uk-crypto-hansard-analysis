@@ -57,3 +57,5 @@ jobs:
             git commit -m 'Build final speech-level Hansard corpus'
             git push
           fi
+
+# Workflow registered and ready for the final corpus build.
