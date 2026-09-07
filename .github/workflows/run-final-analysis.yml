@@ -1,0 +1,60 @@
+name: Run final Hansard analysis
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'scripts/run_final_analysis.py'
+      - 'data/processed/hansard_crypto_2020_2025_final.csv'
+      - '.github/workflows/run-final-analysis.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  final-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install analysis dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas numpy scipy scikit-learn matplotlib
+
+      - name: Run final quantitative analysis
+        run: python scripts/run_final_analysis.py
+
+      - name: Print final analysis summary
+        run: |
+          echo '--- FINAL_ANALYSIS_SUMMARY.md ---'
+          cat outputs/tables/FINAL_ANALYSIS_SUMMARY.md
+          echo '--- analysis_model_selection.csv ---'
+          cat outputs/tables/analysis_model_selection.csv
+          echo '--- analysis_topic_prevalence_by_year.csv ---'
+          cat outputs/tables/analysis_topic_prevalence_by_year.csv
+          echo '--- analysis_chi_square.csv ---'
+          cat outputs/tables/analysis_chi_square.csv
+
+      - name: Commit analysis outputs
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -f data/processed/hansard_crypto_2020_2025_topics.csv
+          git add -f outputs/tables/analysis_*.csv outputs/tables/FINAL_ANALYSIS_SUMMARY.md
+          git add -f outputs/figures/corpus_contributions_by_year.png \
+                     outputs/figures/topic_prevalence_by_year.png \
+                     outputs/figures/actor_topic_heatmap.png
+          if git diff --cached --quiet; then
+            echo 'No analysis changes to commit.'
+          else
+            git commit -m 'Run final Hansard NLP and network analysis'
+            git pull --rebase origin main
+            git push origin main
+          fi
