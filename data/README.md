@@ -2,21 +2,33 @@
 
 The dissertation uses UK Parliament Hansard as the primary data source.
 
-## Pilot dataset
+## Final screened corpus
 
-The local pilot corpus contains 124 parliamentary contribution rows from 8 verified Hansard debates/proceedings, with current verified coverage from 2022–2025. It is a targeted pilot and must not be described as an exhaustive 2020–2025 dataset.
+The final analytical corpus contains 339 parliamentary contributions from 28 verified Hansard debates and proceedings. Eligible contributions appear in 2021, 2022, 2023, 2024 and 2025. No 2020 contribution meets the documented inclusion rules.
 
-The intended final dataset should be stored at:
+The final screened dataset is stored at:
 
-`data/processed/hansard_crypto_2020_2025.csv`
+`data/processed/hansard_crypto_2020_2025_final.csv`
 
-The final corpus should include all screened, relevant parliamentary contributions between 1 January 2020 and 31 December 2025 and retain provenance fields such as Hansard debate ID and source URL.
+The topic-enriched analytical dataset is stored at:
 
-## Required quality checks
+`data/processed/hansard_crypto_2020_2025_topics.csv`
 
-- verify all six years (2020–2025) after systematic retrieval;
-- document search terms and retrieval date;
-- retain inclusion/exclusion decisions;
-- deduplicate records;
-- standardise speaker and institutional names;
-- preserve source URLs for reproducibility.
+The final corpus retains provenance fields such as Hansard debate identifiers, contribution identifiers, official source URLs and Hansard API URLs.
+
+## Data quality controls
+
+The workflow:
+
+- applies the documented 2020–2025 study window;
+- uses the predefined cryptoasset retrieval vocabulary;
+- records contribution-level inclusion decisions;
+- removes duplicates through stable identifiers and text checks;
+- preserves speaker and member metadata where Hansard provides it;
+- retains source URLs and debate IDs for reproducibility;
+- records retrieval timestamps;
+- reports annual corpus coverage without inserting synthetic observations for missing years.
+
+## Interpretation of 2020
+
+The final screened corpus contains no eligible 2020 contribution. This result means that no contribution passes the study's inclusion threshold under the documented search and screening protocol. It does not claim that Parliament makes no reference to blockchain, digital finance or related technology in 2020.
