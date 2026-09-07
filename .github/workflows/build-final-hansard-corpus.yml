@@ -44,8 +44,6 @@ jobs:
               if len(row) < 8:
                   raise SystemExit(f'Registry row {i+1} has only {len(row)} fields: {row}')
               if len(row) > 8:
-                  # Preserve the first four fixed fields and the final three fixed fields;
-                  # any extra commas belong to the debate title.
                   row = row[:4] + [','.join(row[4:-3])] + row[-3:]
               fixed.append(row)
 
@@ -55,32 +53,46 @@ jobs:
           PY
 
       - name: Build speech-level Hansard corpus
+        id: build
+        continue-on-error: true
         run: python scripts/build_final_hansard_corpus.py
 
-      - name: Show corpus QA summary
+      - name: Show corpus build diagnostics
+        if: always()
         run: |
+          echo '--- corpus_build_log.csv ---'
+          if [ -f outputs/tables/corpus_build_log.csv ]; then
+            cat outputs/tables/corpus_build_log.csv
+          else
+            echo 'No corpus build log was produced.'
+          fi
           echo '--- final_corpus_qa_summary.csv ---'
-          cat outputs/tables/final_corpus_qa_summary.csv
-          echo '--- build failures / warnings ---'
-          python - <<'PY'
-          import pandas as pd
-          p='outputs/tables/corpus_build_log.csv'
-          d=pd.read_csv(p)
-          print(d[d['parse_status']!='ok'].to_string(index=False) if (d['parse_status']!='ok').any() else 'No parse failures')
-          PY
+          if [ -f outputs/tables/final_corpus_qa_summary.csv ]; then
+            cat outputs/tables/final_corpus_qa_summary.csv
+          else
+            echo 'No QA summary was produced.'
+          fi
 
-      - name: Commit generated corpus and QA outputs
+      - name: Commit generated corpus and diagnostics
+        if: always()
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git checkout -- data/raw/hansard_debate_registry_2020_2025.csv
-          git add data/processed/hansard_contributions_unfiltered_2020_2025.csv \
-                  data/processed/hansard_crypto_2020_2025_final.csv \
-                  outputs/tables/corpus_build_log.csv \
-                  outputs/tables/final_corpus_qa_summary.csv
+          for f in \
+            data/processed/hansard_contributions_unfiltered_2020_2025.csv \
+            data/processed/hansard_crypto_2020_2025_final.csv \
+            outputs/tables/corpus_build_log.csv \
+            outputs/tables/final_corpus_qa_summary.csv; do
+            if [ -f "$f" ]; then git add "$f"; fi
+          done
           if git diff --cached --quiet; then
             echo 'No generated changes to commit.'
           else
-            git commit -m 'Build final speech-level Hansard corpus'
+            git commit -m 'Update Hansard corpus build outputs and diagnostics'
             git push
           fi
+
+      - name: Fail workflow if corpus build failed
+        if: steps.build.outcome != 'success'
+        run: exit 1
