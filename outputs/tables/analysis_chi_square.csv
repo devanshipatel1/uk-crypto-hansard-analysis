@@ -1,0 +1,2 @@
+n,years_in_test,topics_in_test,chi_square,degrees_of_freedom,p_value,cramers_v,expected_cells_below_5,expected_cells_total,minimum_expected_count,note
+339,2021;2022;2023;2024;2025,5,256.5527974032214,16,2.3390095292282428e-45,0.43496922669709304,8,25,0.5988200589970502,2020 excluded automatically because no eligible contributions remained after screening.
