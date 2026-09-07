@@ -28,6 +28,32 @@ jobs:
           python -m pip install --upgrade pip
           pip install pandas requests beautifulsoup4 lxml
 
+      - name: Normalize debate registry CSV
+        run: |
+          python - <<'PY'
+          import csv
+          from pathlib import Path
+
+          p = Path('data/raw/hansard_debate_registry_2020_2025.csv')
+          rows = list(csv.reader(p.open(newline='', encoding='utf-8')))
+          fixed = []
+          for i, row in enumerate(rows):
+              if i == 0:
+                  fixed.append(row)
+                  continue
+              if len(row) < 8:
+                  raise SystemExit(f'Registry row {i+1} has only {len(row)} fields: {row}')
+              if len(row) > 8:
+                  # Preserve the first four fixed fields and the final three fixed fields;
+                  # any extra commas belong to the debate title.
+                  row = row[:4] + [','.join(row[4:-3])] + row[-3:]
+              fixed.append(row)
+
+          with p.open('w', newline='', encoding='utf-8') as f:
+              csv.writer(f).writerows(fixed)
+          print(f'Normalized {len(fixed)-1} registry rows.')
+          PY
+
       - name: Build speech-level Hansard corpus
         run: python scripts/build_final_hansard_corpus.py
 
@@ -47,6 +73,7 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git checkout -- data/raw/hansard_debate_registry_2020_2025.csv
           git add data/processed/hansard_contributions_unfiltered_2020_2025.csv \
                   data/processed/hansard_crypto_2020_2025_final.csv \
                   outputs/tables/corpus_build_log.csv \
@@ -57,5 +84,3 @@ jobs:
             git commit -m 'Build final speech-level Hansard corpus'
             git push
           fi
-
-# Workflow registered and ready for the final corpus build.
