@@ -33,7 +33,6 @@ jobs:
           python - <<'PY'
           import csv
           from pathlib import Path
-
           p = Path('data/raw/hansard_debate_registry_2020_2025.csv')
           rows = list(csv.reader(p.open(newline='', encoding='utf-8')))
           fixed = []
@@ -46,10 +45,27 @@ jobs:
               if len(row) > 8:
                   row = row[:4] + [','.join(row[4:-3])] + row[-3:]
               fixed.append(row)
-
           with p.open('w', newline='', encoding='utf-8') as f:
               csv.writer(f).writerows(fixed)
           print(f'Normalized {len(fixed)-1} registry rows.')
+          PY
+
+      - name: Probe official Hansard REST API
+        run: |
+          python - <<'PY'
+          import json, requests
+          debate_id='B19E0D46-B0AB-462E-9B87-0CBAEAD6E96C'
+          url=f'https://hansard-api.parliament.uk/debates/debate/{debate_id}.json'
+          r=requests.get(url, timeout=45, headers={'User-Agent':'MScBusinessAnalyticsResearch/1.0'})
+          print('API status:', r.status_code)
+          print('Content-Type:', r.headers.get('content-type'))
+          print('Final URL:', r.url)
+          r.raise_for_status()
+          data=r.json()
+          print('Top-level type:', type(data).__name__)
+          print('Top-level keys:', list(data.keys()) if isinstance(data, dict) else 'not a dict')
+          print('Sample JSON:')
+          print(json.dumps(data, ensure_ascii=False, indent=2)[:12000])
           PY
 
       - name: Build speech-level Hansard corpus
@@ -84,13 +100,14 @@ jobs:
             data/processed/hansard_crypto_2020_2025_final.csv \
             outputs/tables/corpus_build_log.csv \
             outputs/tables/final_corpus_qa_summary.csv; do
-            if [ -f "$f" ]; then git add "$f"; fi
+            if [ -f "$f" ]; then git add -f "$f"; fi
           done
           if git diff --cached --quiet; then
             echo 'No generated changes to commit.'
           else
             git commit -m 'Update Hansard corpus build outputs and diagnostics'
-            git push
+            git pull --rebase origin main
+            git push origin main
           fi
 
       - name: Fail workflow if corpus build failed
